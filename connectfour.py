@@ -1,13 +1,7 @@
 import tensorflow as tf
 
-from bitmasks import *
-
-board = tf.placeholder('float', [4, 4])
-mask = tf.placeholder('bool', [4, 4])
-
-extract_chunk = tf.boolean_mask(board, mask)
-
-is_aligned = tf.equal(tf.reduce_prod(extract_chunk), 1)
+from ai.bitmasks import *
+from ai.reward import *
 
 with tf.Session() as session:
     session.run(tf.initialize_all_variables())
@@ -19,7 +13,7 @@ with tf.Session() as session:
         [0, 0, 0, 0],
     ]
 
-    print session.run(is_aligned, feed_dict={
+    print session.run(is_aligned(), feed_dict={
         board: game_board,
-        mask: bitmasks[3]
+        mask: bitmasks[2]
     })
