@@ -1,8 +1,8 @@
 import unittest
 import tensorflow as tf
 
-from reward import *
-from bitmasks import *
+from ai.bitmasks import bitmasks
+from ai.reward import board, mask, is_aligned
 
 
 class TestStringMethods(unittest.TestCase):

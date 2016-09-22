@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from ai.bitmasks import *
-from ai.reward import *
+from ai.bitmasks import bitmasks
+from ai.reward import board, mask, is_aligned
 
 with tf.Session() as session:
     session.run(tf.initialize_all_variables())
@@ -13,7 +13,7 @@ with tf.Session() as session:
         [0, 0, 0, 0],
     ]
 
-    print session.run(is_aligned(), feed_dict={
+    print session.run(is_aligned, feed_dict={
         board: game_board,
         mask: bitmasks[2]
     })
