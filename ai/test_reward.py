@@ -1,11 +1,11 @@
 import unittest
 import tensorflow as tf
 
-from ai.bitmasks import bitmasks
-from ai.reward import board, mask, is_aligned
+from bitmasks import bitmasks
+from reward import board, mask, is_aligned
 
 
-class TestStringMethods(unittest.TestCase):
+class TestReward(unittest.TestCase):
 
     def test_is_aligned_detects_2nd_row(self):
         with tf.Session() as session:
@@ -19,7 +19,7 @@ class TestStringMethods(unittest.TestCase):
             ]
 
             self.assertEqual(
-                session.run(is_aligned(), feed_dict={
+                session.run(is_aligned, feed_dict={
                     board: game_board,
                     mask: bitmasks[3]
                 }),
@@ -38,7 +38,7 @@ class TestStringMethods(unittest.TestCase):
             ]
 
             self.assertEqual(
-                session.run(is_aligned(), feed_dict={
+                session.run(is_aligned, feed_dict={
                     board: game_board,
                     mask: bitmasks[7]
                 }),
@@ -57,7 +57,7 @@ class TestStringMethods(unittest.TestCase):
             ]
 
             self.assertEqual(
-                session.run(is_aligned(), feed_dict={
+                session.run(is_aligned, feed_dict={
                     board: game_board,
                     mask: bitmasks[0]
                 }),
@@ -76,7 +76,7 @@ class TestStringMethods(unittest.TestCase):
             ]
 
             self.assertEqual(
-                session.run(is_aligned(), feed_dict={
+                session.run(is_aligned, feed_dict={
                     board: game_board,
                     mask: bitmasks[1]
                 }),
