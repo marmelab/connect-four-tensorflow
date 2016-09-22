@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from ai.bitmasks import *
+from bitmasks import bitmasks
 
 board = tf.placeholder('float', [4, 4])
 masks = tf.constant(bitmasks, 'bool', [10, 4, 4])
