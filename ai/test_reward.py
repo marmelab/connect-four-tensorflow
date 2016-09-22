@@ -18,13 +18,12 @@ class TestReward(unittest.TestCase):
                 [0, 0, 0, 0],
             ]
 
-            self.assertEqual(
-                session.run(is_aligned, feed_dict={
-                    board: game_board,
-                    mask: bitmasks[3]
-                }),
-                True
-            )
+            result = session.run(is_aligned, feed_dict={
+                board: game_board,
+                mask: bitmasks[3]
+            })
+
+            self.assertEqual(result, True)
 
     def test_is_aligned_detects_2nd_column(self):
         with tf.Session() as session:
@@ -37,13 +36,12 @@ class TestReward(unittest.TestCase):
                 [0, 1, 0, 0],
             ]
 
-            self.assertEqual(
-                session.run(is_aligned, feed_dict={
-                    board: game_board,
-                    mask: bitmasks[7]
-                }),
-                True
-            )
+            result = session.run(is_aligned, feed_dict={
+                board: game_board,
+                mask: bitmasks[7]
+            })
+
+            self.assertEqual(result, True)
 
     def test_is_aligned_detects_1st_diagonal(self):
         with tf.Session() as session:
@@ -56,13 +54,12 @@ class TestReward(unittest.TestCase):
                 [0, 0, 0, 1],
             ]
 
-            self.assertEqual(
-                session.run(is_aligned, feed_dict={
-                    board: game_board,
-                    mask: bitmasks[0]
-                }),
-                True
-            )
+            result = session.run(is_aligned, feed_dict={
+                board: game_board,
+                mask: bitmasks[0]
+            })
+
+            self.assertEqual(result, True)
 
     def test_is_aligned_do_not_detect_false_positive(self):
         with tf.Session() as session:
@@ -75,10 +72,9 @@ class TestReward(unittest.TestCase):
                 [0, 0, 0, 1],
             ]
 
-            self.assertEqual(
-                session.run(is_aligned, feed_dict={
-                    board: game_board,
-                    mask: bitmasks[1]
-                }),
-                False
-            )
+            result = session.run(is_aligned, feed_dict={
+                board: game_board,
+                mask: bitmasks[1]
+            })
+
+            self.assertEqual(result, False)
