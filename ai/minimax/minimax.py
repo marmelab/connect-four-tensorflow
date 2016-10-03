@@ -1,36 +1,37 @@
 import random
+from copy import deepcopy
+
+from connectfour.game import GAME_STATUS
 
 
-class Minimax(object):
-    """ Minimax object that takes a current connect four board state
-    """
+class Minimax:
 
-    board = None
-    colors = [-1, 1]
+    def __init__(self, player):
+        self.player = player
+        self.game = None
+        self.colors = [-1, 1]
 
-    def __init__(self, board):
-        # copy the board to self.board
-        self.board = [x[:] for x in board]
+    def __enter__(self):
+        return self
 
-    def bestMove(self, depth, state, curr_player):
-        """ Returns the best move (as a column number) and the associated alpha
-            Calls search()
-        """
+    def __exit__(self, type, value, traceback):
+        pass
 
-        # determine opponent's color
-        if curr_player == self.colors[0]:
-            opp_player = self.colors[1]
-        else:
-            opp_player = self.colors[0]
+    def next_move(self, game=None):
+        if game is None:
+            game = self.game
 
-        # enumerate all legal moves
-        legal_moves = {}  # will map legal move states to their alpha values
+        depth = 2
+
+        opponent_player = self.get_opponent(self.player)
+
+        legal_moves = {}
         for col in range(4):
-            # if column i is a legal move...
-            if self.isLegalMove(col, state):
-                # make the move in column 'col' for curr_player
-                temp = self.makeMove(state, col, curr_player)
-                legal_moves[col] = -self.search(depth - 1, temp, opp_player)
+            if game.is_move_legal(col):
+                game_copy = deepcopy(game)
+                game_copy.play(col, self.player)
+                legal_moves[col] = - \
+                    self.search(depth - 1, opponent_player, game_copy)
 
         best_alpha = -99999999
         best_move = None
@@ -41,174 +42,53 @@ class Minimax(object):
                 best_alpha = alpha
                 best_move = move
 
-        return best_move, best_alpha
+        return best_move
 
-    def search(self, depth, state, curr_player):
-        """ Searches the tree at depth 'depth'
-            By default, the state is the board, and curr_player is whomever 
-            called this search
+    def turn_feedback(self, player, column):
+        pass
 
-            Returns the alpha value
-        """
+    def game_feedback(self, game, status, winner):
+        pass
 
-        # enumerate all legal moves from this state
-        legal_moves = []
-        for i in range(4):
-            # if column i is a legal move...
-            if self.isLegalMove(i, state):
-                # make the move in column i for curr_player
-                temp = self.makeMove(state, i, curr_player)
-                legal_moves.append(temp)
-
-        # if this node (state) is a terminal node or depth == 0...
-        if depth == 0 or len(legal_moves) == 0 or self.gameIsOver(state):
-            # return the heuristic value of node
-            return self.value(state, curr_player)
-
-        # determine opponent's color
-        if curr_player == self.colors[0]:
-            opp_player = self.colors[1]
+    def get_opponent(self, current_player):
+        if current_player == self.colors[0]:
+            return self.colors[1]
         else:
-            opp_player = self.colors[0]
+            return self.colors[0]
+
+    def search(self, depth, current_player, game=None):
+        legal_moves = []
+        if game is None:
+            game = self.game
+
+        for i in range(4):
+            if game.is_move_legal(i):
+                game_copy = deepcopy(game)
+                game_copy.play(i, current_player)
+                legal_moves.append(game_copy)
+
+        if depth == 0 or len(legal_moves) == 0 or game.get_status() == GAME_STATUS['FINISHED']:
+            return self.value(current_player, game)
+
+        opponent_player = self.get_opponent(current_player)
 
         alpha = -99999999
         for child in legal_moves:
-            if child == None:
-                print("child == None (search)")
-            alpha = max(alpha, -self.search(depth - 1, child, opp_player))
+            alpha = max(alpha, -self.search(depth - 1, opponent_player, child))
         return alpha
 
-    def isLegalMove(self, column, state):
-        """ Boolean function to check if a move (column) is a legal move
-        """
+    def value(self, color, game=None):
+        if game is None:
+            game = self.game
 
-        for i in range(4):
-            if state[i][column] == 0:
-                # once we find the first empty, we know it's a legal move
-                return True
+        o_color = self.get_opponent(color)
 
-        # if we get here, the column is full
-        return False
+        my_fours = game.check_for_streak(color, 4)
+        my_threes = game.check_for_streak(color, 3)
+        my_twos = game.check_for_streak(color, 2)
+        opp_fours = game.check_for_streak(o_color, 4)
 
-    def gameIsOver(self, state):
-        if self.checkForStreak(state, self.colors[0], 4) >= 1:
-            return True
-        elif self.checkForStreak(state, self.colors[1], 4) >= 1:
-            return True
-        else:
-            return False
-
-    def makeMove(self, state, column, color):
-        """ Change a state object to reflect a player, denoted by color,
-            making a move at column 'column'
-
-            Returns a copy of new state array with the added move
-        """
-
-        temp = [x[:] for x in state]
-        for i in range(4):
-            if temp[i][column] == 0:
-                temp[i][column] = color
-                return temp
-
-    def value(self, state, color):
-        """ Simple heuristic to evaluate board configurations
-            Heuristic is (num of 4-in-a-rows)*99999 + (num of 3-in-a-rows)*100 + 
-            (num of 2-in-a-rows)*10 - (num of opponent 4-in-a-rows)*99999 - (num of opponent
-            3-in-a-rows)*100 - (num of opponent 2-in-a-rows)*10
-        """
-        if color == self.colors[0]:
-            o_color = self.colors[1]
-        else:
-            o_color = self.colors[0]
-
-        my_fours = self.checkForStreak(state, color, 4)
-        my_threes = self.checkForStreak(state, color, 3)
-        my_twos = self.checkForStreak(state, color, 2)
-        opp_fours = self.checkForStreak(state, o_color, 4)
-        #opp_threes = self.checkForStreak(state, o_color, 3)
-        #opp_twos = self.checkForStreak(state, o_color, 2)
         if opp_fours > 0:
             return -100000
         else:
             return my_fours * 100000 + my_threes * 100 + my_twos
-
-    def checkForStreak(self, state, color, streak):
-        count = 0
-        # for each piece in the board...
-        for i in range(4):
-            for j in range(4):
-                # ...that is of the color we're looking for...
-                if state[i][j] == color:
-                    # check if a vertical streak starts at (i, j)
-                    count += self.verticalStreak(i, j, state, streak)
-
-                    # check if a horizontal four-in-a-row starts at (i, j)
-                    count += self.horizontalStreak(i, j, state, streak)
-
-                    # check if a diagonal (either way) four-in-a-row starts at
-                    # (i, j)
-                    count += self.diagonalCheck(i, j, state, streak)
-        # return the sum of streaks of length 'streak'
-        return count
-
-    def verticalStreak(self, row, col, state, streak):
-        consecutiveCount = 0
-        for i in range(row, 4):
-            if state[i][col] == state[row][col]:
-                consecutiveCount += 1
-            else:
-                break
-
-        if consecutiveCount >= streak:
-            return 1
-        else:
-            return 0
-
-    def horizontalStreak(self, row, col, state, streak):
-        consecutiveCount = 0
-        for j in range(col, 4):
-            if state[row][j] == state[row][col]:
-                consecutiveCount += 1
-            else:
-                break
-
-        if consecutiveCount >= streak:
-            return 1
-        else:
-            return 0
-
-    def diagonalCheck(self, row, col, state, streak):
-
-        total = 0
-        # check for diagonals with positive slope
-        consecutiveCount = 0
-        j = col
-        for i in range(row, 4):
-            if j > 3:
-                break
-            elif state[i][j] == state[row][col]:
-                consecutiveCount += 1
-            else:
-                break
-            j += 1  # increment column when row is incremented
-
-        if consecutiveCount >= streak:
-            total += 1
-
-        # check for diagonals with negative slope
-        consecutiveCount = 0
-        j = col
-        for i in range(row, -1, -1):
-            if j > 3:
-                break
-            elif state[i][j] == state[row][col]:
-                consecutiveCount += 1
-            else:
-                break
-            j += 1  # increment column when row is incremented
-
-        if consecutiveCount >= streak:
-            total += 1
-
-        return total
