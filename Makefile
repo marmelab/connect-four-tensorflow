@@ -7,7 +7,7 @@ help:
 # Development ==================================================================
 
 run:
-	python connectfour.py
+	python train.py --p1 minimax --p2 neural_network --iterations 200
 
 # Tests ========================================================================
 
