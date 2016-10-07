@@ -11,6 +11,8 @@ learning_rate = 0.1
 # Network Parameters
 n_hidden_1 = 26
 n_hidden_2 = 26
+n_hidden_3 = 26
+n_hidden_4 = 26
 n_input = board_width * board_height * 3
 n_classes = board_width
 
@@ -25,25 +27,36 @@ y = tf.reshape(rating, [1, n_classes])
 
 
 def multilayer_network(x, weights, biases):
-    # Hidden layer with RELU activation
+    # Hidden layer with sigmoid activation
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    layer_1 = tf.sigmoid(layer_1)
-    # Hidden layer with RELU activation
+    layer_1 = tf.sigmoid(layer_1) # tan hyperbolique ?
+    # Hidden layer with sigmoid activation
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
     layer_2 = tf.sigmoid(layer_2)
-    # Output layer with linear activation
-    out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
+    # Hidden layer with sigmoid activation
+    layer_3 = tf.add(tf.matmul(layer_2, weights['h3']), biases['b3'])
+    layer_3 = tf.sigmoid(layer_3)
+    # Hidden layer with sigmoid activation
+    layer_4 = tf.add(tf.matmul(layer_3, weights['h4']), biases['b4'])
+    layer_4 = tf.sigmoid(layer_3)
+    # Output layer with softmax activation
+    out_layer = tf.matmul(layer_4, weights['out']) + biases['out']
+    out_layer = tf.nn.softmax(out_layer)
     return out_layer
 
 # Store layers weight & bias
 weights = {
     'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
     'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-    'out': tf.Variable(tf.random_normal([n_hidden_2, n_classes]))
+    'h3': tf.Variable(tf.random_normal([n_hidden_2, n_hidden_3])),
+    'h4': tf.Variable(tf.random_normal([n_hidden_3, n_hidden_4])),
+    'out': tf.Variable(tf.random_normal([n_hidden_4, n_classes]))
 }
 biases = {
     'b1': tf.Variable(tf.random_normal([n_hidden_1])),
     'b2': tf.Variable(tf.random_normal([n_hidden_2])),
+    'b3': tf.Variable(tf.random_normal([n_hidden_3])),
+    'b4': tf.Variable(tf.random_normal([n_hidden_4])),
     'out': tf.Variable(tf.random_normal([n_classes]))
 }
 
@@ -51,9 +64,14 @@ biases = {
 predict = multilayer_network(x, weights, biases)
 
 # Backward propagation
-cost = tf.reduce_mean(tf.square(y - predict)) ## < à tracer
+
+# cost = tf.reduce_mean(tf.square(y - predict))
+cost = tf.contrib.losses.softmax_cross_entropy(predict, y)
 # cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(predict, y))
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+
+# optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+optimizer = tf.train.AdamOptimizer().minimize(cost)
+
 
 saver = tf.train.Saver()
 
@@ -104,8 +122,6 @@ class NeuralNetwork:
 
         if winner != 0:
             if winner == self.player:
-                rating = 1
-
                 for action in self.saved_actions:
                     self.back_propagation(
                         action['board'], action['column'], 1)
