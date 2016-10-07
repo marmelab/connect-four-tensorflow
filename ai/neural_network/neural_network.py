@@ -9,14 +9,17 @@ board_height = 4
 learning_rate = 0.1
 
 # Network Parameters
-n_hidden_1 = 10
-n_hidden_2 = 10
-n_input = board_width * board_height
+n_hidden_1 = 26
+n_hidden_2 = 26
+n_input = board_width * board_height * 3
 n_classes = board_width
 
 # tf Graph input
 board = tf.placeholder("float", [4, 4])
-x = tf.reshape(board, [1, n_input])
+x_p1 = tf.cast(tf.equal(board, -1), "float")
+x_p2 = tf.cast(tf.equal(board, 1), "float")
+x_empty = tf.cast(tf.equal(board, 0), "float")
+x = tf.reshape(tf.concat(0,[x_p1, x_p2, x_empty]), [1, n_input])
 rating = tf.placeholder("float", [4])
 y = tf.reshape(rating, [1, n_classes])
 
@@ -24,10 +27,10 @@ y = tf.reshape(rating, [1, n_classes])
 def multilayer_network(x, weights, biases):
     # Hidden layer with RELU activation
     layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    layer_1 = tf.nn.relu(layer_1)
+    layer_1 = tf.sigmoid(layer_1)
     # Hidden layer with RELU activation
     layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.nn.relu(layer_2)
+    layer_2 = tf.sigmoid(layer_2)
     # Output layer with linear activation
     out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
     return out_layer
@@ -48,9 +51,9 @@ biases = {
 predict = multilayer_network(x, weights, biases)
 
 # Backward propagation
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(predict, y))
-
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+cost = tf.reduce_mean(tf.square(y - predict)) ## < à tracer
+# cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(predict, y))
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
 
 saver = tf.train.Saver()
 
