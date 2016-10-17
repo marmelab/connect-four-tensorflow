@@ -2,66 +2,70 @@ import tensorflow as tf
 
 from copy import deepcopy
 
-board_width = 4
-board_height = 4
-
 # Parameters
 learning_rate = 0.1
 
+board_width = 4
+board_height = 4
+
+hidden_layers = [
+    {
+        'neurons' : 26,
+        'activation_function': 'sigmoid',
+    },
+    {
+        'neurons' : 26,
+        'activation_function': 'sigmoid',
+    },
+    {
+        'neurons' : 26,
+        'activation_function': 'sigmoid',
+    },
+    {
+        'neurons' : 26,
+        'activation_function': 'sigmoid',
+    },
+    {
+        'neurons' : board_width,
+        'activation_function': 'softmax',
+    },
+]
+
+
 # Network Parameters
-n_hidden_1 = 26
-n_hidden_2 = 26
-n_hidden_3 = 26
-n_hidden_4 = 26
 n_input = board_width * board_height * 3
-n_classes = board_width
 
 # tf Graph input
-board = tf.placeholder("float", [4, 4])
+board = tf.placeholder("float", [board_width, board_height])
 x_p1 = tf.cast(tf.equal(board, -1), "float")
 x_p2 = tf.cast(tf.equal(board, 1), "float")
 x_empty = tf.cast(tf.equal(board, 0), "float")
 x = tf.reshape(tf.concat(0,[x_p1, x_p2, x_empty]), [1, n_input])
 rating = tf.placeholder("float", [4])
-y = tf.reshape(rating, [1, n_classes])
+y = tf.reshape(rating, [1, board_width])
 
+def multilayer_network(x, hidden_layers):
+    previous_size = n_input
+    previous_layer = x
+    for layer in hidden_layers:
+        layer_size = layer['neurons']
+        layer['weights'] = tf.Variable(tf.random_normal([previous_size, layer_size]))
+        layer['biases'] = tf.Variable(tf.random_normal([layer_size]))
 
-def multilayer_network(x, weights, biases):
-    # Hidden layer with sigmoid activation
-    layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    layer_1 = tf.sigmoid(layer_1) # tan hyperbolique ?
-    # Hidden layer with sigmoid activation
-    layer_2 = tf.add(tf.matmul(layer_1, weights['h2']), biases['b2'])
-    layer_2 = tf.sigmoid(layer_2)
-    # Hidden layer with sigmoid activation
-    layer_3 = tf.add(tf.matmul(layer_2, weights['h3']), biases['b3'])
-    layer_3 = tf.sigmoid(layer_3)
-    # Hidden layer with sigmoid activation
-    layer_4 = tf.add(tf.matmul(layer_3, weights['h4']), biases['b4'])
-    layer_4 = tf.sigmoid(layer_3)
-    # Output layer with softmax activation
-    out_layer = tf.matmul(layer_4, weights['out']) + biases['out']
-    out_layer = tf.nn.softmax(out_layer)
-    return out_layer
+        layer['predict'] = tf.add(tf.matmul(previous_layer, layer['weights']), layer['biases'])
 
-# Store layers weight & bias
-weights = {
-    'h1': tf.Variable(tf.random_normal([n_input, n_hidden_1])),
-    'h2': tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-    'h3': tf.Variable(tf.random_normal([n_hidden_2, n_hidden_3])),
-    'h4': tf.Variable(tf.random_normal([n_hidden_3, n_hidden_4])),
-    'out': tf.Variable(tf.random_normal([n_hidden_4, n_classes]))
-}
-biases = {
-    'b1': tf.Variable(tf.random_normal([n_hidden_1])),
-    'b2': tf.Variable(tf.random_normal([n_hidden_2])),
-    'b3': tf.Variable(tf.random_normal([n_hidden_3])),
-    'b4': tf.Variable(tf.random_normal([n_hidden_4])),
-    'out': tf.Variable(tf.random_normal([n_classes]))
-}
+        if layer['activation_function'] == 'sigmoid':
+            layer['predict'] = tf.sigmoid(layer['predict'])
+        elif layer['activation_function'] == 'softmax':
+            layer['predict'] = tf.nn.softmax(layer['predict'])
+
+        previous_size = layer_size
+        previous_layer = layer['predict']
+
+    return hidden_layers[-1]['predict']
 
 # Construct model
-predict = multilayer_network(x, weights, biases)
+predict = multilayer_network(x, hidden_layers)
 
 # Backward propagation
 
