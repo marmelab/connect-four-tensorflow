@@ -1,9 +1,9 @@
 
-def number_of_consecutive_values(array, how_many_consecutives=4):
+def number_of_consecutive_values(array, how_many_consecutives=4, player=None):
     consecutive_cells = 1
     nb_consecutive = {}
     for i in range(1, len(array), 1):
-        if array[i - 1] == array[i]:
+        if array[i - 1] == array[i] and (array[i] == player or player == None):
             consecutive_cells += 1
         else:
             consecutive_cells = 1
@@ -15,12 +15,12 @@ def number_of_consecutive_values(array, how_many_consecutives=4):
     return nb_consecutive
 
 
-def number_of_consecutive_values_2d(array, how_many_consecutives=4):
+def number_of_consecutive_values_2d(array, how_many_consecutives=4, player=None):
 
     nb_consecutive = {}
     for sub_array in array:
         sub_consecutive = number_of_consecutive_values(
-            sub_array, how_many_consecutives)
+            sub_array, how_many_consecutives, player)
         for key in sub_consecutive:
             if not key in nb_consecutive:
                 nb_consecutive[key] = 0

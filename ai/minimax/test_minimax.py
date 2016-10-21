@@ -5,7 +5,7 @@ from connectfour.game import Game
 class TestMiniMax(unittest.TestCase):
 
     def test_next_move_gives_the_best_defence_move(self):
-        minimax = Minimax(1)
+        minimax = Minimax(1, 3)
         game = Game(4, 4)
 
         game.board = [
@@ -18,7 +18,7 @@ class TestMiniMax(unittest.TestCase):
         self.assertEqual(minimax.next_move(game), 2)
 
     def test_next_move_gives_the_best_attack_move(self):
-        minimax = Minimax(1)
+        minimax = Minimax(1, 3)
         game = Game(4, 4)
 
         game.board = [
@@ -31,7 +31,7 @@ class TestMiniMax(unittest.TestCase):
         self.assertEqual(minimax.next_move(game), 3)
 
     def test_next_move_gives_the_best_move_with_diagonals(self):
-        minimax = Minimax(1)
+        minimax = Minimax(1, 3)
         game = Game(4, 4)
 
         game.board = [
@@ -42,3 +42,35 @@ class TestMiniMax(unittest.TestCase):
         ]
 
         self.assertEqual(minimax.next_move(game), 0)
+
+    def test_next_move_gives_the_best_defence_move_on_7x6_board(self):
+        minimax = Minimax(-1, 3)
+        game = Game(7, 6)
+
+        game.board = [
+            [0, 0, 0, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, -1, -1],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+        ]
+
+        self.assertEqual(minimax.next_move(game), 0)
+
+
+    def test_next_move_gives_the_best_defence_move_on_7x6_board2(self):
+        minimax = Minimax(1, 3)
+        game = Game(7, 6)
+
+        game.board = [
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, -1, -1, -1],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1],
+        ]
+        self.assertEqual(minimax.next_move(game), 4)

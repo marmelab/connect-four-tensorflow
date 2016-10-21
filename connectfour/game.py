@@ -27,9 +27,10 @@ class Game:
         self.reset()
 
     def reset(self):
-        self.board = [[0 for i in range(self.board_width)]
-                      for j in range(self.board_height)]
+        self.board = [[0 for i in range(self.board_height)]
+                      for j in range(self.board_width)]
         self.current_player = -1 if random() < 0.5 else 1
+        # self.current_player = -1
         self.winner = 0
         self.status = GAME_STATUS['PLAYING']
         self.turn = 0
@@ -72,46 +73,66 @@ class Game:
 
         return status
 
+
+
     def has_aligned_discs(self, number_of_cells):
         consecutive_values = {}
 
         sub_consecutive_values = number_of_consecutive_values(
             self.board, number_of_cells)
-        consecutive_values = merge_add(
-            consecutive_values, sub_consecutive_values)
+        if -1 in sub_consecutive_values or 1 in sub_consecutive_values:
+            return sub_consecutive_values
 
         sub_consecutive_values = number_of_consecutive_values(
             transpose_horizontally(self.board), number_of_cells)
-        consecutive_values = merge_add(
-            consecutive_values, sub_consecutive_values)
+        if -1 in sub_consecutive_values or 1 in sub_consecutive_values:
+            return sub_consecutive_values
 
         sub_consecutive_values = number_of_consecutive_values(
             transpose_diagonally(self.board, True), number_of_cells)
+        if -1 in sub_consecutive_values or 1 in sub_consecutive_values:
+            return sub_consecutive_values
+
+        sub_consecutive_values = number_of_consecutive_values(
+            transpose_diagonally(self.board), number_of_cells)
+        if -1 in sub_consecutive_values or 1 in sub_consecutive_values:
+            return sub_consecutive_values
+
+        return {}
+
+    def count_aligned_discs(self, number_of_cells, player = None):
+        consecutive_values = {}
+
+        sub_consecutive_values = number_of_consecutive_values(
+            self.board, number_of_cells, player)
         consecutive_values = merge_add(
             consecutive_values, sub_consecutive_values)
 
         sub_consecutive_values = number_of_consecutive_values(
-            transpose_diagonally(self.board), number_of_cells)
+            transpose_horizontally(self.board), number_of_cells, player)
         consecutive_values = merge_add(
             consecutive_values, sub_consecutive_values)
 
-        return consecutive_values
+        sub_consecutive_values = number_of_consecutive_values(
+            transpose_diagonally(self.board, True), number_of_cells, player)
+        consecutive_values = merge_add(
+            consecutive_values, sub_consecutive_values)
 
-    def check_for_streak(self, player, number_of_cells):
-        aligned_discs = self.has_aligned_discs(number_of_cells)
-        if player in aligned_discs:
-            return aligned_discs[player]
-        else:
-            return 0
+        sub_consecutive_values = number_of_consecutive_values(
+            transpose_diagonally(self.board), number_of_cells, player)
+        consecutive_values = merge_add(
+            consecutive_values, sub_consecutive_values)
+
+        if player == None:
+            return consecutive_values
+
+        return {} if not player in consecutive_values else consecutive_values
 
     def is_move_legal(self, column):
-        for i in range(4):
-            if self.board[column][i] == 0:
-                return True
-        return False
+        return self.board[column][0] == 0
 
     def get_legal_moves(self):
         legal_moves = []
-        for column_number in range(4):
+        for column_number in range(self.board_width):
             legal_moves.append(self.is_move_legal(column_number))
         return legal_moves

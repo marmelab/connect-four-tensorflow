@@ -28,3 +28,9 @@ class TestArrayConsecutive(unittest.TestCase):
         array = [[0, 1, 2, 0], [3, 3, 2, 4], [6, 3, 3, 9]]
         consecutives = number_of_consecutive_values_2d(array, 2)
         self.assertEqual(consecutives[3], 2)
+
+    def test_it_should_only_count_asked_player(self):
+        array = [[0, 2, 2, 0], [3, 3, 2, 4], [6, 3, 3, 9]]
+        consecutives = number_of_consecutive_values_2d(array, 2, 3)
+        self.assertEqual(consecutives[3], 2)
+        self.assertEqual(2 in consecutives, False)
