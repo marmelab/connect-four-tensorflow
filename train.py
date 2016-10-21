@@ -43,29 +43,32 @@ def main(argv):
     second_player = 1
 
     p1_type = 'neural_network'
-    p2_type = 'neural_network'
+    p2_type = 'minimax'
     number_of_games = 1
-    randomness = 0.25
-    board_width = 4
-    board_height = 4
+    randomness = 0.1
+    board_width = 7
+    board_height = 6
+
+    opponent_level = 2
+    learn = False
 
     try:
         opts, args = getopt.getopt(argv, "hv", [
-                                   "p1=", "p2=", "board_width=", "board_height=", "iterations=", "randomness="])
+                                   "opponent=", "board_width=", "board_height=", "iterations=", "randomness=", "level=", "learn="])
     except getopt.GetoptError:
-        print 'train.py --p1 <1st player type> --p2 <2nd player type>'
+        print 'train.py --opponent <opponent type>'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'train.py --p1 <1st player type> --p2 <2nd player type>'
+            print 'train.py --opponent <opponent type>'
             sys.exit()
         if opt == '-v':
             global verbose
             verbose = True
-        elif opt in ("--p1"):
-            p1_type = arg
-        elif opt in ("--p2"):
+        elif opt in ("--opponent"):
             p2_type = arg
+        elif opt in ("--level"):
+            opponent_level = string.atoi(arg)
         elif opt in ("--board_width"):
             board_width = string.atoi(arg)
         elif opt in ("--board_height"):
@@ -74,6 +77,8 @@ def main(argv):
             number_of_games = string.atoi(arg)
         elif opt in ("--randomness"):
             randomness = string.atof(arg)
+        elif opt in ("--learn"):
+            learn = True if arg == "true" else False
 
     game = Game(board_width, board_height)
 
@@ -91,32 +96,46 @@ def main(argv):
 
     batch_number = 1
 
-    with ai.factory.create(p1_type, first_player) as p1_ai:
-        with ai.factory.create(p2_type, second_player) as p2_ai:
+    with ai.factory.create(p1_type, first_player, learn = learn) as neural_network_ai:
+        with ai.factory.create(p2_type, second_player, level = opponent_level) as opponent_ai:
             for game_number in range(number_of_games):
                 status = game.get_status()
 
                 while status == GAME_STATUS['PLAYING']:
                     current_player = game.current_player
-                    current_ai = p1_ai if current_player == first_player \
-                        else p2_ai
 
-                    action = current_ai.next_move(game)
+                    action = None
+                    opponent_action = None
 
-                    if random() < randomness and current_player == first_player:
-                        printv('random triggered')
-                        action = game.random_action()
-                    printv(str(current_player) + ' plays ' + str(action))
+                    if current_player == first_player :
+                        # neural network
+                        action = neural_network_ai.next_move(game)
+                        opponent_action = opponent_ai.next_move(game)
+                        printv('Neural network plays ' + str(action) + '(' + str(opponent_action) + ')')
+
+                        if learn:
+                            neural_network_ai.turn_feedback(game, action, opponent_action)
+                    else :
+                        # opponent
+                        action = opponent_ai.next_move(game)
+                        opponent_action = neural_network_ai.next_move(game)
+                        printv('Minimax plays ' + str(action) + '(' + str(opponent_action) + ')')
+
+                        if random() <= randomness :
+                            action = game.random_action()
+                        elif learn:
+                            neural_network_ai.opponent_turn_feedback(game, opponent_action, action)
+
                     game.play(action, current_player)
                     printv(np.matrix(game.board).transpose())
 
                     status = game.get_status()
 
-                    p1_ai.turn_feedback(current_player, action)
-                    p2_ai.turn_feedback(current_player, action)
+                    opponent_ai.turn_feedback(current_player, action)
 
-                p1_ai.game_feedback(game, status, game.winner)
-                p2_ai.game_feedback(game, status, game.winner)
+                printv(('Neural network' if game.winner == -1 else 'Minimax') + ' wins')
+                neural_network_ai.game_feedback(game, status, game.winner)
+                opponent_ai.game_feedback(game, status, game.winner)
 
                 if(game.winner == first_player):
                     batch_statuses['won_p1'] += 1
@@ -126,7 +145,7 @@ def main(argv):
                     batch_statuses['draw'] += 1
 
                 game.reset()
-                if game_number > 1 and game_number % 100 == 0:
+                if game_number > 1 and game_number % 10 == 0:
                     print("### BATCH N " + str(batch_number) + " ###")
                     batch_number += 1
                     handle_stats(game_statuses, batch_statuses,
