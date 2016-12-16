@@ -42,7 +42,7 @@ def main(argv):
     first_player = -1
     second_player = 1
 
-    p1_type = 'neural_network'
+    p1_type = 'keras'
     p2_type = 'minimax'
     number_of_games = 1
     randomness = 0.1
@@ -110,7 +110,8 @@ def main(argv):
                     if current_player == first_player :
                         # neural network
                         action = neural_network_ai.next_move(game)
-                        opponent_action = opponent_ai.next_move(game)
+                        if p2_type != 'human':
+                            opponent_action = opponent_ai.next_move(game)
                         printv('Neural network plays ' + str(action) + '(' + str(opponent_action) + ')')
 
                         if learn:
@@ -119,7 +120,7 @@ def main(argv):
                         # opponent
                         action = opponent_ai.next_move(game)
                         opponent_action = neural_network_ai.next_move(game)
-                        printv('Minimax plays ' + str(action) + '(' + str(opponent_action) + ')')
+                        printv(p2_type + ' plays ' + str(action) + '(' + str(opponent_action) + ')')
 
                         if random() <= randomness :
                             action = game.random_action()
@@ -127,13 +128,14 @@ def main(argv):
                             neural_network_ai.opponent_turn_feedback(game, opponent_action, action)
 
                     game.play(action, current_player)
-                    printv(np.matrix(game.board).transpose())
+                    if p2_type != 'human':
+                        printv(np.matrix(game.board).transpose())
 
                     status = game.get_status()
 
                     opponent_ai.turn_feedback(current_player, action)
 
-                printv(('Neural network' if game.winner == -1 else 'Minimax') + ' wins')
+                printv(('Neural network' if game.winner == -1 else p2_type) + ' wins')
                 neural_network_ai.game_feedback(game, status, game.winner)
                 opponent_ai.game_feedback(game, status, game.winner)
 

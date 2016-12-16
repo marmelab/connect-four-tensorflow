@@ -1,6 +1,7 @@
 import random
 from copy import deepcopy
 import numpy as np
+import string
 
 from connectfour.game import GAME_STATUS
 
@@ -11,7 +12,7 @@ class Minimax:
         self.player = player
         self.game = None
         self.colors = [-1, 1]
-        self.level = level
+        self.level = string.atoi(level)
 
     def __enter__(self):
         return self
@@ -38,7 +39,7 @@ class Minimax:
         best_alpha = -99999999
         best_move = None
         moves = legal_moves.items()
-        random.shuffle(list(moves))
+        random.shuffle(moves)
 
         for move, alpha in moves:
             if alpha >= best_alpha:
@@ -93,7 +94,7 @@ class Minimax:
         my_threes = 0
         my_twos = 0
         opp_fours = 0
-        
+
         if color in aligned_fours:
             my_fours = aligned_fours[color]
         if color in aligned_threes:

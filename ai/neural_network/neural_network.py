@@ -5,8 +5,8 @@ from copy import deepcopy
 # Parameters
 learning_rate = 0.1
 
-board_width = 7
-board_height = 6
+board_width = 4
+board_height = 4
 
 hidden_layers = [
     {
@@ -23,7 +23,7 @@ hidden_layers = [
     },
     {
         'neurons' : 67,
-        # 'dropout': 0.75,
+        'dropout': 0.75,
         'activation_function': 'sigmoid',
     },
     {
